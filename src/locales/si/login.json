@@ -1,0 +1,12 @@
+{
+  "title": "ඇතුළත් වන්න",
+  "username": "පරිශීලක නාමය",
+  "password": "මුරපදය",
+  "login": "ඇතුළත් වීම",
+  "forgotPassword": "මුරපදය අමතකද?",
+  "invalidCredentials": "පරිශීලක නාමය හෝ මුරපදය වැරදියි.",
+  "loginSuccess": "ඔබ සාර්ථකව ඇතුළත් විය!",
+  "usernameRequired": "පරිශීලක නාමය අවශ්‍යයි.",
+  "passwordRequired": "මුරපදය අවශ්‍යයි.",
+  "passwordInvalidLength": "මුරපදය අක්ෂර 4 කට වඩා දිග විය යුතුය."
+}

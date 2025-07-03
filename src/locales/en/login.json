@@ -1,0 +1,12 @@
+{
+  "title": "Login",
+  "username": "Username",
+  "password": "Password",
+  "login": "Log In",
+  "forgotPassword": "Forgot Password?",
+  "invalidCredentials": "Invalid username or password.",
+  "loginSuccess": "Successfully logged in!",
+  "usernameRequired": "Username is required.",
+  "passwordRequired": "Password is required.",
+  "passwordInvalidLength": "Password must be at least 4 characters."
+}
