@@ -25,6 +25,8 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "react-toastify";
+import axiosInstance from "../api/axiosInstance";
+import { useNavigate } from "react-router-dom";
 
 const languages = [
   { code: "en", label: "English" },
@@ -38,6 +40,8 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+
+  const navigate = useNavigate();
 
   const open = Boolean(anchorEl);
 
@@ -70,13 +74,22 @@ const Login = () => {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = async () => {
+  const onSubmit = async (data) => {
     setLoading(true);
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      toast.success(t("loginSuccess"));
-      // Redirect or perform further actions here
+      const response = await axiosInstance.post("/auth/login", {
+        username: data.username,
+        password: data.password,
+      });
+
+      if (response?.data?.user?.firstLogin === "Y") {
+        localStorage.removeItem("hasSeenIntroTour");
+      } else {
+        localStorage.setItem("hasSeenIntroTour", "true");
+      }
+
+      navigate("/dashboard");
     } catch (error) {
       toast.error(t("loginError"));
       console.error("Login error:", error);
@@ -188,7 +201,7 @@ const Login = () => {
               variant="body2"
               color="primary"
               sx={{ cursor: "pointer", textDecoration: "underline" }}
-              onClick={() => alert("Redirect to forgot password")}
+              onClick={() => navigate("/reset-password")}
             >
               {t("forgotPassword")}
             </Typography>
