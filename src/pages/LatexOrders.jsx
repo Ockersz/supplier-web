@@ -29,6 +29,8 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { toast } from "react-toastify";
 import axiosInstance from "../api/axiosInstance";
 import { format } from "date-fns";
+import Joyride, { STATUS, EVENTS } from "react-joyride";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 const LatexOrders = () => {
   const theme = useTheme();
@@ -94,7 +96,6 @@ const LatexOrders = () => {
   };
 
   const handleAddSubRow = (orderNum) => {
-    console.log("Adding sub row for order:", orderNum);
     const newRow = {
       id: null,
       date: new Date(),
@@ -252,7 +253,8 @@ const LatexOrders = () => {
       companyId: 3,
       ponum: row.orderNumber,
       itemmasterId:
-        latexOrders.find((o) => o.num === row.orderNumber)?.itemmasterId || null,
+        latexOrders.find((o) => o.num === row.orderNumber)?.itemmasterId ||
+        null,
       date: format(row.date, "yyyy-MM-dd"),
       tnkno: row.tankNumber,
       proddate: format(row.productionDate, "yyyy-MM-dd"),
@@ -318,12 +320,141 @@ const LatexOrders = () => {
     if (!current || !snapshot) return true;
     return JSON.stringify(current) !== JSON.stringify(snapshot);
   };
+
+  const [runTour, setRunTour] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
+  const [tourAddedRow, setTourAddedRow] = useState(null); // For cleanup after tour
+
+  const steps = [
+    {
+      target: "#latex-order-title",
+      content: "This is where all your latex orders are listed.",
+    },
+    {
+      target: ".expand-icon-btn",
+      content: "Click here to expand a row and view more details.",
+    },
+    {
+      target: ".add-subrow-btn",
+      content: "Click here to add a new sub row entry for this order.",
+    },
+    {
+      target: ".subrow-input",
+      content: "Fill in the latex tank details in each input field.",
+    },
+    {
+      target: ".save-row-btn",
+      content: "Click 'Save' to store the sub row entry.",
+    },
+  ];
+
+  const handleJoyrideCallback = ({ type, status, index }) => {
+    if ([STATUS.FINISHED, STATUS.SKIPPED, STATUS.PAUSED].includes(status)) {
+      if (tourAddedRow) {
+        const { orderNum, index } = tourAddedRow;
+
+        const updated = [...(subRows[orderNum] || [])];
+        updated.splice(index, 1);
+        setSubRows((prev) => ({ ...prev, [orderNum]: updated }));
+
+        const snapshot = [...(subRowSnapshots[orderNum] || [])];
+        snapshot.splice(index, 1);
+        setSubRowSnapshots((prev) => ({ ...prev, [orderNum]: snapshot }));
+
+        setTourAddedRow(null);
+      }
+
+      setRunTour(false);
+      localStorage.setItem("hasSeenIntroTour", "true");
+      setStepIndex(0);
+      return;
+    }
+
+    if (type === EVENTS.STEP_AFTER && index === 0) {
+      const expandBtn = document.querySelectorAll(".expand-icon-btn")?.[0];
+      expandBtn?.click();
+
+      const waitForExpanded = setInterval(() => {
+        const addBtn = document.querySelector(".add-subrow-btn");
+        if (addBtn) {
+          clearInterval(waitForExpanded);
+
+          const orderNum = latexOrders[0]?.num;
+          const subRowList = subRows[orderNum] || [];
+
+          if (subRowList.length === 0) {
+            addBtn.click();
+
+            // Wait a bit to ensure state is updated
+            setTimeout(() => {
+              const updatedSubRows = subRows[orderNum] || [];
+              setTourAddedRow({
+                orderNum,
+                index: updatedSubRows.length - 1, // Fix here
+              });
+            }, 300);
+          }
+
+          setStepIndex(1);
+        }
+      }, 200);
+    }
+
+    if (type === EVENTS.STEP_AFTER && index === 1) {
+      setStepIndex(2);
+    }
+
+    if (type === EVENTS.STEP_AFTER && index === 2) {
+      setStepIndex(3);
+    }
+
+    if (type === EVENTS.STEP_AFTER && index === 3) {
+      setStepIndex(4);
+    }
+
+    if (type === EVENTS.STEP_AFTER && index === 4) {
+      setRunTour(false);
+      localStorage.setItem("hasSeenIntroTour", "true");
+      setStepIndex(0);
+    }
+
+    if (type === EVENTS.TARGET_NOT_FOUND) {
+      if (tourAddedRow) {
+        const { orderNum, index } = tourAddedRow;
+
+        const updated = [...(subRows[orderNum] || [])];
+        updated.splice(index, 1);
+        setSubRows((prev) => ({ ...prev, [orderNum]: updated }));
+
+        const snapshot = [...(subRowSnapshots[orderNum] || [])];
+        snapshot.splice(index, 1);
+        setSubRowSnapshots((prev) => ({ ...prev, [orderNum]: snapshot }));
+
+        setTourAddedRow(null);
+      }
+
+      setRunTour(false);
+      localStorage.setItem("hasSeenIntroTour", "true");
+    }
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ p: { xs: 1, sm: 2, md: 4 } }}>
-        <Typography variant="h5" gutterBottom>
-          Latex Orders
-        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Typography id="latex-order-title" variant="h5" gutterBottom>
+            Latex Orders
+          </Typography>
+          <IconButton onClick={() => setRunTour(true)} aria-label="help">
+            <HelpOutlineIcon />
+          </IconButton>
+        </Box>
         {!loading && (
           <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
             <Button
@@ -479,7 +610,7 @@ const LatexOrders = () => {
                   <React.Fragment key={i}>
                     <TableRow hover onClick={() => toggleRow(order.num)}>
                       <TableCell>
-                        <IconButton size="small">
+                        <IconButton className="expand-icon-btn">
                           {expandedRows[order.num] ? (
                             <ExpandLessIcon />
                           ) : (
@@ -515,6 +646,7 @@ const LatexOrders = () => {
                               }}
                             >
                               <Button
+                                className="add-subrow-btn"
                                 variant="outlined"
                                 onClick={() => handleAddSubRow(order.num)}
                               >
@@ -592,6 +724,7 @@ const LatexOrders = () => {
                                                           />
                                                         )}
                                                         format="dd/MM/yyyy"
+                                                        className="subrow-input"
                                                       />
                                                     </TableCell>
                                                   );
@@ -600,6 +733,7 @@ const LatexOrders = () => {
                                                   <TableCell key={field}>
                                                     <TextField
                                                       variant="standard"
+                                                      className="subrow-input"
                                                       size="small"
                                                       value={value}
                                                       onChange={(e) =>
@@ -627,6 +761,7 @@ const LatexOrders = () => {
                                                   variant="outlined"
                                                   size="small"
                                                   color="primary"
+                                                  className="save-row-btn"
                                                   disabled={
                                                     !isRowDirty(order.num, j)
                                                   }
@@ -672,6 +807,22 @@ const LatexOrders = () => {
           </TableContainer>
         )}
       </Box>
+      <Joyride
+        steps={steps}
+        run={runTour}
+        stepIndex={stepIndex}
+        continuous
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            zIndex: 9999,
+            primaryColor: "#1976d2",
+          },
+        }}
+      />
     </LocalizationProvider>
   );
 };
