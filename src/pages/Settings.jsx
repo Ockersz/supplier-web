@@ -10,6 +10,7 @@ import {
   CircularProgress,
   Tabs,
   Tab,
+  Toolbar,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useForm } from "react-hook-form";
@@ -20,34 +21,23 @@ import axiosInstance from "../api/axiosInstance";
 
 // Validation schemas
 const emailSchema = Yup.object({
-  email: Yup.string()
-    .email("Invalid email format")
-    .required("Email is required"),
+  email: Yup.string().email("Invalid email format").required("Email is required"),
 });
 
 const passwordSchema = Yup.object({
   currentPassword: Yup.string().required("Current password is required"),
-  newPassword: Yup.string()
-    .min(6, "Password must be at least 6 characters")
-    .required("New password is required"),
+  newPassword: Yup.string().min(6, "Password must be at least 6 characters").required("New password is required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("newPassword"), null], "Passwords must match")
     .required("Please confirm your password"),
-  email: Yup.string()
-    .email("Invalid email format")
-    .required("Email is required"),
+  email: Yup.string().email("Invalid email format").required("Email is required"),
 });
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState(0);
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
+  const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
   const [loading, setLoading] = useState(false);
 
-  // Forms
   const emailForm = useForm({
     resolver: yupResolver(emailSchema),
     mode: "onTouched",
@@ -58,7 +48,7 @@ const Settings = () => {
     resolver: yupResolver(passwordSchema),
     mode: "onTouched",
     defaultValues: {
-      email: "", // add this line
+      email: "",
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
@@ -90,15 +80,13 @@ const Settings = () => {
     setLoading(true);
     try {
       await axiosInstance.post("/auth/change-password", {
-        oldPassword: null, // email-only update
-        newPassword: null, // email-only update
+        oldPassword: null,
+        newPassword: null,
         email: data.email,
       });
       toast.success("Email updated successfully!");
     } catch (err) {
-      toast.error(
-        `Failed to update email: ${err.response?.data?.message || err.message}`
-      );
+      toast.error(`Failed to update email: ${err.response?.data?.message || err.message}`);
     } finally {
       setLoading(false);
     }
@@ -110,7 +98,7 @@ const Settings = () => {
       await axiosInstance.post("/auth/change-password", {
         oldPassword: data.currentPassword,
         newPassword: data.newPassword,
-        email: null, // email is not required for password change
+        email: null,
       });
       toast.success("Password updated successfully!");
       passwordForm.reset({
@@ -120,11 +108,7 @@ const Settings = () => {
         confirmPassword: "",
       });
     } catch (err) {
-      toast.error(
-        `Failed to update password: ${
-          err.response?.data?.message || err.message
-        }`
-      );
+      toast.error(`Failed to update password: ${err.response?.data?.message || err.message}`);
     } finally {
       setLoading(false);
     }
@@ -133,26 +117,41 @@ const Settings = () => {
   return (
     <Box
       display="flex"
+      flexDirection="column"
       justifyContent="center"
-      alignItems="start"
-      height="calc(100vh - 128px)"
-      p={3}
+      alignItems="center"
+      sx={{
+        minHeight: window.innerHeight - 64 || "auto",
+        bgcolor: "background.default",
+        px: { xs: 2, sm: 3, md: 4 },
+        py: { xs: 3, sm: 4 },
+      }}
     >
-      <Paper elevation={6} sx={{ width: "100%", maxWidth: 600, p: 4 }}>
+      <Toolbar />
+      <Paper
+        elevation={6}
+        sx={{
+          width: "100%",
+          maxWidth: { xs: 360, sm: 500, md: 600 },
+          p: { xs: 2, sm: 3, md: 4 },
+        }}
+      >
         <Tabs
           value={activeTab}
           onChange={(_, val) => setActiveTab(val)}
           centered
+          variant="fullWidth"
+          sx={{ mb: 3 }}
         >
           <Tab label="Change Email" />
           <Tab label="Change Password" />
         </Tabs>
 
+        {/* Email Tab */}
         {activeTab === 0 && (
           <Box
             component="form"
             onSubmit={emailForm.handleSubmit(handleEmailUpdate)}
-            mt={3}
             noValidate
           >
             <Typography variant="h6" gutterBottom>
@@ -180,94 +179,42 @@ const Settings = () => {
           </Box>
         )}
 
+        {/* Password Tab */}
         {activeTab === 1 && (
           <Box
             component="form"
             onSubmit={passwordForm.handleSubmit(handlePasswordUpdate)}
-            mt={3}
             noValidate
           >
             <Typography variant="h6" gutterBottom>
               Change Password
             </Typography>
 
-            <TextField
-              fullWidth
-              label="Current Password"
-              type={showPasswords.current ? "text" : "password"}
-              margin="normal"
-              {...passwordForm.register("currentPassword")}
-              error={Boolean(passwordForm.formState.errors.currentPassword)}
-              helperText={
-                passwordForm.formState.errors.currentPassword?.message
-              }
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => handleToggleVisibility("current")}
-                      edge="end"
-                    >
-                      {showPasswords.current ? (
-                        <VisibilityOff />
-                      ) : (
-                        <Visibility />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="New Password"
-              type={showPasswords.new ? "text" : "password"}
-              margin="normal"
-              {...passwordForm.register("newPassword")}
-              error={Boolean(passwordForm.formState.errors.newPassword)}
-              helperText={passwordForm.formState.errors.newPassword?.message}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => handleToggleVisibility("new")}
-                      edge="end"
-                    >
-                      {showPasswords.new ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Confirm Password"
-              type={showPasswords.confirm ? "text" : "password"}
-              margin="normal"
-              {...passwordForm.register("confirmPassword")}
-              error={Boolean(passwordForm.formState.errors.confirmPassword)}
-              helperText={
-                passwordForm.formState.errors.confirmPassword?.message
-              }
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => handleToggleVisibility("confirm")}
-                      edge="end"
-                    >
-                      {showPasswords.confirm ? (
-                        <VisibilityOff />
-                      ) : (
-                        <Visibility />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
+            {[
+              { label: "Current Password", name: "currentPassword", toggleKey: "current" },
+              { label: "New Password", name: "newPassword", toggleKey: "new" },
+              { label: "Confirm Password", name: "confirmPassword", toggleKey: "confirm" },
+            ].map(({ label, name, toggleKey }) => (
+              <TextField
+                key={name}
+                fullWidth
+                label={label}
+                type={showPasswords[toggleKey] ? "text" : "password"}
+                margin="normal"
+                {...passwordForm.register(name)}
+                error={Boolean(passwordForm.formState.errors[name])}
+                helperText={passwordForm.formState.errors[name]?.message}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => handleToggleVisibility(toggleKey)} edge="end">
+                        {showPasswords[toggleKey] ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            ))}
 
             <Button
               type="submit"

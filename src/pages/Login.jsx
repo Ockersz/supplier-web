@@ -10,6 +10,8 @@ import {
   Menu,
   MenuItem,
   CircularProgress,
+  // useMediaQuery,
+  // useTheme,
 } from "@mui/material";
 import {
   AccountCircle,
@@ -34,6 +36,9 @@ const languages = [
 ];
 
 const Login = () => {
+  // const theme = useTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const { t, i18n } = useTranslation("login");
   const { mode, toggleColorMode } = useColorMode();
 
@@ -42,21 +47,16 @@ const Login = () => {
   const [anchorEl, setAnchorEl] = useState(null);
 
   const navigate = useNavigate();
-
   const open = Boolean(anchorEl);
 
-  const handleLanguageClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+  const handleLanguageClick = (event) => setAnchorEl(event.currentTarget);
 
   const handleLanguageChange = (lang) => {
     i18n.changeLanguage(lang);
     setAnchorEl(null);
   };
 
-  const handleTogglePassword = () => {
-    setShowPassword((prev) => !prev);
-  };
+  const handleTogglePassword = () => setShowPassword((prev) => !prev);
 
   const schema = yup.object().shape({
     username: yup.string().required(t("usernameRequired")),
@@ -77,11 +77,7 @@ const Login = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      // Simulate API call
-      const response = await axiosInstance.post("/auth/login", {
-        username: data.username,
-        password: data.password,
-      });
+      const response = await axiosInstance.post("/auth/login", data);
 
       if (response?.data?.user?.firstLogin === "Y") {
         localStorage.removeItem("hasSeenIntroTour");
@@ -105,14 +101,24 @@ const Login = () => {
       alignItems="center"
       height="100vh"
       bgcolor="background.default"
+      px={2} // padding for mobile devices
     >
-      <Paper elevation={6} sx={{ p: 4, width: "100%", maxWidth: 400 }}>
+      <Paper
+        elevation={6}
+        sx={{
+          p: { xs: 3, sm: 4 },
+          width: "100%",
+          maxWidth: 400,
+        }}
+      >
         {/* Header */}
         <Box
           display="flex"
           justifyContent="space-between"
           alignItems="center"
           mb={2}
+          flexWrap="wrap"
+          gap={1}
         >
           <Typography variant="h6">{t("title")}</Typography>
 

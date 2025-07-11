@@ -25,6 +25,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Login />} />
         <Route path="/reset-password" element={<ResetPasswordRequest />} />
         {pageRoutes.map((route, index) => (
           <Route

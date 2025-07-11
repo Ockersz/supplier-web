@@ -19,6 +19,8 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Brightness4,
@@ -32,19 +34,20 @@ import { useNavigate } from "react-router-dom";
 import Joyride, { EVENTS, STATUS } from "react-joyride";
 
 const drawerWidth = 240;
-const collapsedWidth = 60;
+
 
 const MainFrame = ({ children, title = "" }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const { mode, toggleColorMode } = useColorMode();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const isMenuOpen = Boolean(anchorEl);
   const navigate = useNavigate();
 
   const [runTour, setRunTour] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-
-  // ✅ Dialog state
   const [showTourPrompt, setShowTourPrompt] = useState(false);
 
   const toggleDrawer = () => setOpen((prev) => !prev);
@@ -55,36 +58,39 @@ const MainFrame = ({ children, title = "" }) => {
     navigate("/login");
   };
 
-  const handleSettings = () => navigate("/settings");
+  const handleSettings = () => {
+    navigate("/settings");
+    setAnchorEl(null);
+  };
 
   const tourSteps = [
     {
       target: ".account-button",
       content: "Click here to access your account settings.",
       placement: "bottom",
-      disableBeacon: true, // 👈 Important
+      disableBeacon: true,
     },
     {
       target: ".menu-settings",
       content: "Click Settings to update your password.",
       placement: "right",
-      disableBeacon: true, // 👈 Important
+      disableBeacon: true,
     },
   ];
 
-  // ✅ Show tour dialog on first login
   useEffect(() => {
     const hasSeenTour = localStorage.getItem("hasSeenIntroTour");
-
-    if (!hasSeenTour) {
-      setShowTourPrompt(true); // open dialog
-    }
+    if (!hasSeenTour) setShowTourPrompt(true);
   }, []);
+
+  useEffect(() => {
+    if (isMobile) setOpen(false);
+  }, [isMobile]);
 
   const startTour = () => {
     setShowTourPrompt(false);
-    setStepIndex(0); // 👈 Reset to first step
-    setRunTour(true); // 👈 This launches the tour immediately
+    setStepIndex(0);
+    setRunTour(true);
   };
 
   const skipTour = () => {
@@ -101,8 +107,7 @@ const MainFrame = ({ children, title = "" }) => {
     }
 
     if (type === EVENTS.STEP_AFTER && index === 0) {
-      const profileBtn = document.querySelector(".account-button");
-      profileBtn?.click();
+      document.querySelector(".account-button")?.click();
 
       const waitForMenu = setInterval(() => {
         if (document.querySelector(".menu-settings")) {
@@ -113,13 +118,11 @@ const MainFrame = ({ children, title = "" }) => {
     }
 
     if (type === EVENTS.STEP_AFTER && index === 1) {
-      // ✅ End after last step
       setRunTour(false);
       localStorage.setItem("hasSeenIntroTour", "true");
       setStepIndex(0);
     }
 
-    // Optionally handle if menu failed to open
     if (type === EVENTS.TARGET_NOT_FOUND) {
       setRunTour(false);
       localStorage.setItem("hasSeenIntroTour", "true");
@@ -172,7 +175,7 @@ const MainFrame = ({ children, title = "" }) => {
               onClose={() => setAnchorEl(null)}
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               transformOrigin={{ vertical: "top", horizontal: "right" }}
-              disablePortal // Important for Joyride
+              disablePortal
             >
               <MenuItem onClick={handleSettings} className="menu-settings">
                 Settings
@@ -185,15 +188,13 @@ const MainFrame = ({ children, title = "" }) => {
 
       {/* Drawer */}
       <Drawer
-        variant="permanent"
+        variant="temporary"
         open={open}
+        onClose={() => setOpen(false)}
+        ModalProps={{ keepMounted: true }} // Improves performance on mobile
         sx={{
-          width: open ? drawerWidth : collapsedWidth,
-          flexShrink: 0,
-          whiteSpace: "nowrap",
-          boxSizing: "border-box",
           "& .MuiDrawer-paper": {
-            width: open ? drawerWidth : collapsedWidth,
+            width: drawerWidth,
             overflowX: "hidden",
             transition: (theme) =>
               theme.transitions.create("width", {
@@ -206,18 +207,17 @@ const MainFrame = ({ children, title = "" }) => {
         <Toolbar />
         <Divider />
         <List>
-          {["Home", "Reports", "Settings"].map((text) => (
-            <Tooltip
-              key={text}
-              title={!open ? text : ""}
-              placement="right"
-              arrow
-            >
+          {["Dashboard", "Latex Orders"].map((text) => (
+            <Tooltip key={text} title={text} placement="right" arrow>
               <ListItem
                 button
-                sx={{ justifyContent: open ? "initial" : "center" }}
+                onClick={() => {
+                  if (text === "Dashboard") navigate("/dashboard");
+                  else if (text === "Latex Orders") navigate("/latex-orders");
+                  setOpen(false); // Close drawer on click
+                }}
               >
-                <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
+                <ListItemText primary={text} />
               </ListItem>
             </Tooltip>
           ))}
@@ -230,8 +230,8 @@ const MainFrame = ({ children, title = "" }) => {
         sx={{
           flexGrow: 1,
           bgcolor: "background.default",
-          p: 3,
-          ml: open ? `${drawerWidth}px` : `${collapsedWidth}px`,
+          p: { xs: 1, sm: 2, md: 3 },
+          // No margin-left anymore
         }}
       >
         <Toolbar />
@@ -256,7 +256,7 @@ const MainFrame = ({ children, title = "" }) => {
         }}
       />
 
-      {/* ✅ Tour Prompt Dialog */}
+      {/* Tour Dialog */}
       <Dialog open={showTourPrompt}>
         <DialogTitle>Welcome!</DialogTitle>
         <DialogContent>

@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -16,8 +16,11 @@
     "@hookform/resolvers": "^5.1.1",
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
+    "@mui/x-date-pickers": "^8.7.0",
     "@tailwindcss/vite": "^4.1.11",
     "axios": "^1.10.0",
+    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
     "i18next": "^25.3.0",
     "i18next-browser-languagedetector": "^8.2.0",
     "react": "^19.1.0",
