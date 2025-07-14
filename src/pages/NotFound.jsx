@@ -32,7 +32,7 @@ const NotFound = () => {
       <Button
         variant="contained"
         color="primary"
-        onClick={() => navigate("/dashboard")}
+        onClick={() => navigate("/latex-orders")}
       >
         🛸 Beam me back to Dashboard
       </Button>

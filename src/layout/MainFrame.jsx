@@ -207,7 +207,7 @@ const MainFrame = ({ children, title = "" }) => {
         <Toolbar />
         <Divider />
         <List>
-          {["Dashboard", "Latex Orders"].map((text) => (
+          {["Latex Orders"].map((text) => (
             <Tooltip key={text} title={text} placement="right" arrow>
               <ListItem
                 button
