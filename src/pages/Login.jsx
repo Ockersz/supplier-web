@@ -85,7 +85,7 @@ const Login = () => {
         localStorage.setItem("hasSeenIntroTour", "true");
       }
 
-      navigate("/dashboard");
+      navigate("/latex-orders");
     } catch (error) {
       toast.error(t("loginError"));
       console.error("Login error:", error);

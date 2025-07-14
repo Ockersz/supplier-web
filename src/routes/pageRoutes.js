@@ -5,11 +5,11 @@ const Settings = lazy(() => import("../pages/Settings.jsx"));
 const LatexOrders = lazy(() => import("../pages/LatexOrders.jsx"));
 
 export const pageRoutes = [
-  {
-    path: "/dashboard",
-    element: Dashboard,
-    title: "Dashboard",
-  },
+  // {
+  //   path: "/dashboard",
+  //   element: Dashboard,
+  //   title: "Dashboard",
+  // },
   {
     path: "/settings",
     element: Settings,
