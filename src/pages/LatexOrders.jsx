@@ -599,6 +599,7 @@ const LatexOrders = () => {
                 <TableRow>
                   <TableCell />
                   <TableCell>Order #</TableCell>
+                  <TableCell>PO Date</TableCell>
                   <TableCell>Item Description</TableCell>
                   <TableCell align="right">Qty</TableCell>
                   <TableCell align="right">Received</TableCell>
@@ -619,6 +620,9 @@ const LatexOrders = () => {
                         </IconButton>
                       </TableCell>
                       <TableCell>{order.num}</TableCell>
+                      <TableCell>
+                        {format(new Date(order.podate), "dd/MM/yyyy")}
+                      </TableCell>
                       <TableCell>{order.itmdesc}</TableCell>
                       <TableCell align="right">
                         {Number(order.qty).toLocaleString()}
